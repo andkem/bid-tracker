@@ -103,6 +103,7 @@ function bidtracker_OnCommand(msg)
 		if (auction_item ~= "") then
 			auction_started = true;
 			auction_bids = {}
+			auction_os_bids = {}
 			SendChatMessage("Whisper bids on the " .. auction_item .. " to me! (Minimum bid: " .. auction_min_bid .. " DKP)", "RAID", nil, nil);
 			chat_print("Auction started!");
 		else
