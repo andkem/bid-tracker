@@ -1,0 +1,7 @@
+## Title: BidTracker
+## Notes: Helps with taking DKP bids during a raid.
+## Interface: 11200
+## OptionalDeps:
+## SavedVariables: completed_auctions
+## Dependencies:
+bidtracker.xml

@@ -1,0 +1,13 @@
+<Ui xsi:schemaLocation="http://www.blizzard.com/wow/ui">
+	<Script file="bidtracker.lua" />
+	<Frame name="bidtracker">
+		<Scripts>
+			<OnLoad>
+				bidtracker_OnLoad();
+			</OnLoad>
+			<OnEvent>
+				bidtracker_OnEvent(event);
+			</OnEvent>
+		</Scripts>
+	</Frame>
+</Ui>
