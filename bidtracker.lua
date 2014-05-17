@@ -1,3 +1,6 @@
+-- Hook
+local lOriginal_SetItemRef;
+
 -- Status variables
 local auction_started = false;
 local auction_item = "";
@@ -5,6 +8,8 @@ local auction_bids = {};
 local auction_os_bids = {};
 local auction_min_bid = 0;
 
+-- Variable for scrolling the bidlist.
+local scroll = 0
 
 -- Function to print to the chat frame.
 function chat_print(text)
@@ -32,8 +37,23 @@ function bidtracker_Init()
 	SLASH_bidtracker1 = "/bidtracker";
 	SLASH_bidtracker2 = "/btr";
 
+	-- Hook the shift clicking on an item.
+	lOriginal_SetItemRef = SetItemRef;
+	SetItemRef = bidtracker_ItemLink;
+
 	chat_print("BidTracker is now loaded! Use the command /bidtracker or /btr to use.");
 
+end
+
+-- Function that puts the link of an item in the item box.
+function bidtracker_ItemLink(link, text, button)
+	local item_box = getglobal("BidTrackerFrameItemName");
+
+	lOriginal_SetItemRef(link, text, button);
+
+	if (strsub(link, 1, 6) ~= "Player" and not auction_started) then
+		item_box:SetText(text);
+	end
 end
 
 -- Decode and call event handlers.
@@ -80,6 +100,58 @@ function bidtracker_HandleWhisper(msg, author)
 		auction_bids[author] = bid;
 		SendChatMessage("You have bid: " .. tostring(bid) .. " DKP!", "WHISPER", nil, author);
 	end
+
+	bidtracker_UpdateInterfaceBidList();
+end
+
+-- Updates the list of 10 bids for the interface.
+function bidtracker_UpdateInterfaceBidList()
+	local bids_to_check = {}
+
+	-- If the main bid table is empty we check off-spec bids.
+	if (next(auction_bids) == nil) then
+		bids_to_check = auction_os_bids;
+		getglobal("BidTrackerFrameBidType"):SetText("Bid type: OS");
+	else
+		bids_to_check = auction_bids;
+		getglobal("BidTrackerFrameBidType"):SetText("Bid type: MS");
+	end
+	
+	-- Put all the bids into an array.
+	local keys = {}
+	local i = 0;
+	for name, value in pairs(bids_to_check) do
+		i = i + 1;
+		keys[i] = { name, value };
+	end
+	
+	-- Function that compares by dkp and not by name.
+	local function compare(first, second)
+		return first[2] > second[2];
+	end
+
+	-- Sort the array.
+	table.sort(keys, compare);
+	
+	
+	-- Output the bids.
+	for i = 0, 9 do
+		getglobal("BidTrackerFrameBid" .. tostring(i)):SetText("");
+		
+		if (keys[i + 1 + scroll] ~= nil) then
+			getglobal("BidTrackerFrameBid" .. tostring(i)):SetText(i + 1 + scroll .. ". "  .. keys[i + 1 + scroll][1] .. ": " .. keys[i + 1 + scroll][2]);
+		end
+	end
+end
+
+function bidtracker_ScrollUp()
+	scroll = scroll - 1;
+	bidtracker_UpdateInterfaceBidList();
+end
+
+function bidtracker_ScrollDown()
+	scroll = scroll + 1;
+	bidtracker_UpdateInterfaceBidList();
 end
 
 -- Decode and call slash command handlers.
@@ -100,19 +172,9 @@ function bidtracker_OnCommand(msg)
 			chat_print("Usage: /bidtracker setitem #min_bid $item");
 		end
 	elseif (command_words[1] == "startauction") then
-		if (auction_item ~= "") then
-			auction_started = true;
-			auction_bids = {}
-			auction_os_bids = {}
-			SendChatMessage("Whisper bids on the " .. auction_item .. " to me! (Minimum bid: " .. auction_min_bid .. " DKP)", "RAID", nil, nil);
-			chat_print("Auction started!");
-		else
-			chat_print("Must have an item before starting the auction!");
-		end
+		bidtracker_StartAuction();
 	elseif (command_words[1] == "stopauction") then
-		auction_started = false;
-		SendChatMessage("The auction for the " .. auction_item .. " has finished. No more bids will be accepted!", "RAID", nil, nil);
-		chat_print("Auction finished!");
+		bidtracker_StopAuction();
 	elseif (command_words[1] == "announce") then
 		if (auction_started == false) then
 			bidtracker_HandleAnnounce();
@@ -132,6 +194,7 @@ function bidtracker_OnCommand(msg)
 	elseif (command_words[1] == "removebid") then
 		if (auction_bids[command_words[2]] ~= nil) then
 			auction_bids[command_words[2]] = nil;
+			bidtracker_UpdateInterfaceBidList();
 			chat_print("The bid from " .. command_words[2] .. " has been removed!");
 		else
 			chat_print("Player " .. command_words[2] .. " does not exist in the bid list!");
@@ -139,6 +202,7 @@ function bidtracker_OnCommand(msg)
 	elseif (command_words[1] == "removeosbid") then
 		if (auction_os_bids[command_words[2]] ~= nil) then
 			auction_os_bids[command_words[2]] = nil;
+			bidtracker_UpdateInterfaceBidList();
 			chat_print("The off-spec bid from " .. command_words[2] .. " has been removed!");
 		else
 			chat_print("Player " .. command_words[2] .. " does not exist in the off-spec bid list!");
@@ -151,9 +215,18 @@ function bidtracker_OnCommand(msg)
 		for key, val in completed_auctions do
 			chat_print(val['name'] .. " - " .. val['item'] .. " - " .. val['price']);
 		end
+	elseif (command_words[1] == "show") then
+		local frame = getglobal("BidTrackerFrame");
+
+		if (frame:IsVisible()) then
+			frame:Hide();
+		else
+			frame:Show();
+		end
 	else
 		chat_print("Usage:");
 		chat_print("setitem #min_bid $item_name - Set the minimum bid and the item to be auctioned. Shift-links do work!");
+		chat_print("show - Toggles the BidTracker GUI.");
 		chat_print("startauction                - Start the auction.");
 		chat_print("stopauction                 - Stop the auction.");
 		chat_print("announce                    - Announce the auction winner.");
@@ -164,6 +237,35 @@ function bidtracker_OnCommand(msg)
 		chat_print("listsaves			- List saved finished auctions.");
 		chat_print("clearsaves			- Clear all saved auctions.");
 	end
+end
+
+function bidtracker_StartAuction()
+	if (auction_item ~= "") then
+		auction_started = true;
+		SendChatMessage("Whisper bids on the " .. auction_item .. " to me! (Minimum bid: " .. auction_min_bid .. " DKP)", "RAID", nil, nil);
+		
+		scroll = 0;
+		getglobal("BidTrackerFrameButtonStartAuction"):SetButtonState("DISABLED");
+		getglobal("BidTrackerFrameButtonAnnounce"):SetButtonState("DISABLED");
+		getglobal("BidTrackerFrameButtonSetItem"):SetButtonState("DISABLED");
+		getglobal("BidTrackerFrameButtonStopAuction"):SetButtonState("NORMAL");
+		
+		chat_print("Auction started!");
+	else
+		chat_print("Must have an item before starting the auction!");
+	end
+end
+
+function bidtracker_StopAuction()
+	auction_started = false;
+	SendChatMessage("The auction for the " .. auction_item .. " has finished. No more bids will be accepted!", "RAID", nil, nil);
+
+	getglobal("BidTrackerFrameButtonStartAuction"):SetButtonState("NORMAL");
+	getglobal("BidTrackerFrameButtonAnnounce"):SetButtonState("NORMAL");
+	getglobal("BidTrackerFrameButtonSetItem"):SetButtonState("NORMAL");
+	getglobal("BidTrackerFrameButtonStopAuction"):SetButtonState("DISABLED");
+	
+	chat_print("Auction finished!");
 end
 
 -- Announce the winner of the auction.
@@ -235,10 +337,18 @@ function bidtracker_HandleAnnounce()
 				['price'] = prev_max
 			}
 			table.insert(completed_auctions, winner_data);
-			auction_item = "";
 			break;
 		end
 	end
+
+	auction_item = "";
+	auction_bids = {}
+	auction_os_bids = {}
+	
+	getglobal("BidTrackerFrameButtonAnnounce"):SetButtonState("DISABLED");
+	getglobal("BidTrackerFrameItemName"):SetText("");
+	getglobal("BidTrackerFrameMinimumBid"):SetText("0");
+	bidtracker_UpdateInterfaceBidList();
 end
 
 -- Set the bid item.
@@ -246,5 +356,12 @@ function bidtracker_SetItem(item, min_bid)
 	auction_item = item;
 	auction_min_bid = min_bid;
 	chat_print("Auction item set to: " .. auction_item .. " (Min bid: " .. auction_min_bid .. " DKP)");
+	
+	getglobal("BidTrackerFrameItemName"):SetText(auction_item);
+	getglobal("BidTrackerFrameMinimumBid"):SetText(auction_min_bid);
+end
+
+function bidtracker_HandleSetItemButton()
+	bidtracker_SetItem(getglobal("BidTrackerFrameItemName"):GetText(), tonumber(getglobal("BidTrackerFrameMinimumBid"):GetText()));
 end
 
