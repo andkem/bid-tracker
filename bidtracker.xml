@@ -37,9 +37,9 @@
 			</Button>
 			<Button name="$parentButtonStartAuction" inherits="OptionsButtonTemplate" text="Start Auction">
 				<Anchors>
-					<Anchor point="BOTTOMLEFT">
+					<Anchor point="BOTTOMRIGHT">
 						<Offset>
-							<AbsDimension x="12" y="16" />
+							<AbsDimension x="-12" y="16" />
 						</Offset>
 					</Anchor>
 				</Anchors>
@@ -61,9 +61,9 @@
 			</Button>
 			<Button name="$parentButtonStopAuction" inherits="OptionsButtonTemplate" text="Stop Auction">
 				<Anchors>
-					<Anchor point="BOTTOMRIGHT">
+					<Anchor point="BOTTOMLEFT">
 						<Offset>
-							<AbsDimension x="-12" y="16" />
+							<AbsDimension x="12" y="16" />
 						</Offset>
 					</Anchor>
 				</Anchors>
