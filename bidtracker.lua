@@ -343,6 +343,8 @@ function bidtracker_HandleAnnounce()
 	elseif (next(auction_alt_bids) ~=nil) then
 		bids_to_check = auction_alt_bids;
 		SendChatMessage("There were no main spec bids or off-spec bids! The item will go to an alt!", "RAID", nil, nil);
+	else
+		bids_to_check = auction_bids; -- Set the empty table as the table to check to avoid errors.
 	end
 
 	-- Find the max bid. (or max bids if several people bid the same amount)
