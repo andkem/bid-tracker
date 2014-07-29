@@ -10,7 +10,11 @@ local auction_alt_bids = {};
 local auction_min_bid = 0;
 
 -- Variable for scrolling the bidlist.
-local scroll = 0
+local scroll = 0;
+-- Sorted array containing the bidlist currently displayed by the GUI.
+local sorted_bids = {};
+-- Variable for tracking which list is shown.
+local currently_shown_list = "MS";
 
 -- Function to print to the chat frame.
 function chat_print(text)
@@ -41,6 +45,10 @@ function bidtracker_Init()
 	-- Hook the shift clicking on an item.
 	lOriginal_SetItemRef = SetItemRef;
 	SetItemRef = bidtracker_ItemLink;
+
+	for i=0,9 do
+		getglobal("BidTrackerFrameButtonDeleteBid" .. tostring(i)):SetButtonState("DISABLED");
+	end
 
 	chat_print("BidTracker is now loaded! Use the command /bidtracker or /btr to use.");
 
@@ -112,26 +120,31 @@ end
 
 -- Updates the list of 10 bids for the interface.
 function bidtracker_UpdateInterfaceBidList()
-	local bids_to_check = {}
+	local bids_to_check = {};
+
+	-- Clear the display array.
+	sorted_bids = {};
 
 	-- We check the bid tables in order to see which table should be shown.
 	if (next(auction_bids) ~= nil) then
 		bids_to_check = auction_bids;
 		getglobal("BidTrackerFrameBidType"):SetText("Bid type: MS");
+		currently_shown_list = "MS";
 	elseif (next(auction_os_bids) ~= nil) then
 		bids_to_check = auction_os_bids;
 		getglobal("BidTrackerFrameBidType"):SetText("Bid type: OS");
+		currently_shown_list = "OS";
 	elseif (next(auction_alt_bids) ~=nil) then
 		bids_to_check = auction_alt_bids;
 		getglobal("BidTrackerFrameBidType"):SetText("Bid type: ALT");
+		currently_shown_list = "ALT";
 	end
 	
 	-- Put all the bids into an array.
-	local keys = {}
 	local i = 0;
 	for name, value in pairs(bids_to_check) do
 		i = i + 1;
-		keys[i] = { name, value };
+		sorted_bids[i] = { name, value };
 	end
 	
 	-- Function that compares by dkp and not by name.
@@ -140,15 +153,18 @@ function bidtracker_UpdateInterfaceBidList()
 	end
 
 	-- Sort the array.
-	table.sort(keys, compare);
+	table.sort(sorted_bids, compare);
 	
 	
 	-- Output the bids.
 	for i = 0, 9 do
 		getglobal("BidTrackerFrameBid" .. tostring(i)):SetText("");
 		
-		if (keys[i + 1 + scroll] ~= nil) then
-			getglobal("BidTrackerFrameBid" .. tostring(i)):SetText(i + 1 + scroll .. ". "  .. keys[i + 1 + scroll][1] .. ": " .. keys[i + 1 + scroll][2]);
+		if (sorted_bids[i + 1 + scroll] ~= nil) then
+			getglobal("BidTrackerFrameBid" .. tostring(i)):SetText(i + 1 + scroll .. ". "  .. sorted_bids[i + 1 + scroll][1] .. ": " .. sorted_bids[i + 1 + scroll][2]);
+			getglobal("BidTrackerFrameButtonDeleteBid" .. tostring(i)):SetButtonState("NORMAL");
+		else
+			getglobal("BidTrackerFrameButtonDeleteBid" .. tostring(i)):SetButtonState("DISABLED");
 		end
 	end
 end
@@ -160,6 +176,23 @@ end
 
 function bidtracker_ScrollDown()
 	scroll = scroll + 1;
+	bidtracker_UpdateInterfaceBidList();
+end
+
+-- Remove a bid via the interface.
+function bidtracker_RemoveBidButton(button_index)
+	local deletion_name = sorted_bids[button_index + 1 + scroll][1];
+
+	if (currently_shown_list == "MS") then
+		auction_bids[deletion_name] = nil;
+	elseif (currently_shown_list == "OS") then
+		auction_os_bids[deletion_name] = nil;
+	else
+		auction_alt_bids[deletion_name] = nil;
+	end
+
+	chat_print("The bid from " .. deletion_name .. " has been removed!");
+	
 	bidtracker_UpdateInterfaceBidList();
 end
 
