@@ -6,6 +6,7 @@ local auction_started = false;
 local auction_item = "";
 local auction_bids = {};
 local auction_os_bids = {};
+local auction_alt_bids = {};
 local auction_min_bid = 0;
 
 -- Variable for scrolling the bidlist.
@@ -81,8 +82,8 @@ function bidtracker_HandleWhisper(msg, author)
 	end
 
 	if (incoming_words[2] ~= nil) then
-		if (bid ~= nil and string.lower(incoming_words[2]) ~= "os") then
-			SendChatMessage("You must only bid a number followed by OS if you're making an alt bid or off-spec bid! For example: -10, -5, 0, 5, 10", "WHISPER", nil, author);
+		if (bid ~= nil and string.lower(incoming_words[2]) ~= "os" and string.lower(incoming_words[2]) ~= "alt") then
+			SendChatMessage("You must only bid a number followed by ALT/OS if you're making an alt bid or off-spec bid! For example: -10, -5, 0, 5, 10", "WHISPER", nil, author);
 			return;
 		end
 	end
@@ -93,9 +94,14 @@ function bidtracker_HandleWhisper(msg, author)
 	end
 	
 
-	if (incoming_words[2] ~= nil and string.lower(incoming_words[2]) == "os") then	
-		auction_os_bids[author] = bid;
-		SendChatMessage("Your OS bid is: " .. tostring(bid) .. " DKP!", "WHISPER", nil, author);
+	if (incoming_words[2] ~= nil) then
+		if (string.lower(incoming_words[2]) == "os") then	
+			auction_os_bids[author] = bid;
+			SendChatMessage("Your OS bid is: " .. tostring(bid) .. " DKP!", "WHISPER", nil, author);
+		elseif (string.lower(incoming_words[2]) == "alt") then
+			auction_alt_bids[author] = bid;
+			SendChatMessage("Your ALT bid is: " .. tostring(bid) .. " DKP!", "WHISPER", nil, author);
+		end	
 	else
 		auction_bids[author] = bid;
 		SendChatMessage("You have bid: " .. tostring(bid) .. " DKP!", "WHISPER", nil, author);
@@ -108,13 +114,16 @@ end
 function bidtracker_UpdateInterfaceBidList()
 	local bids_to_check = {}
 
-	-- If the main bid table is empty we check off-spec bids.
-	if (next(auction_bids) == nil) then
-		bids_to_check = auction_os_bids;
-		getglobal("BidTrackerFrameBidType"):SetText("Bid type: OS");
-	else
+	-- We check the bid tables in order to see which table should be shown.
+	if (next(auction_bids) ~= nil) then
 		bids_to_check = auction_bids;
 		getglobal("BidTrackerFrameBidType"):SetText("Bid type: MS");
+	elseif (next(auction_os_bids) ~= nil) then
+		bids_to_check = auction_os_bids;
+		getglobal("BidTrackerFrameBidType"):SetText("Bid type: OS");
+	elseif (next(auction_alt_bids) ~=nil) then
+		bids_to_check = auction_alt_bids;
+		getglobal("BidTrackerFrameBidType"):SetText("Bid type: ALT");
 	end
 	
 	-- Put all the bids into an array.
@@ -191,6 +200,11 @@ function bidtracker_OnCommand(msg)
 		for name, bid in pairs(auction_os_bids) do
 			chat_print(name .. ": " .. bid);
 		end
+	elseif (command_words[1] == "listaltbids") then
+		chat_print("Name: bid");
+		for name, bid in pairs(auction_alt_bids) do
+			chat_print(name .. ": " .. bid);
+		end
 	elseif (command_words[1] == "removebid") then
 		if (auction_bids[command_words[2]] ~= nil) then
 			auction_bids[command_words[2]] = nil;
@@ -206,6 +220,14 @@ function bidtracker_OnCommand(msg)
 			chat_print("The off-spec bid from " .. command_words[2] .. " has been removed!");
 		else
 			chat_print("Player " .. command_words[2] .. " does not exist in the off-spec bid list!");
+		end
+	elseif (command_words[1] == "removealtbid") then
+		if (auction_alt_bids[command_words[2]] ~= nil) then
+			auction_alt_bids[command_words[2]] = nil;
+			bidtracker_UpdateInterfaceBidList();
+			chat_print("The alt bid from " .. command_words[2] .. " has been removed!");
+		else
+			chat_print("Player " .. command_words[2] .. " does not exist in the alt bid list!");
 		end
 	elseif (command_words[1] == "clearsaves") then
 		completed_auctions = {};
@@ -226,16 +248,18 @@ function bidtracker_OnCommand(msg)
 	else
 		chat_print("Usage:");
 		chat_print("setitem #min_bid $item_name - Set the minimum bid and the item to be auctioned. Shift-links do work!");
-		chat_print("show - Toggles the BidTracker GUI.");
+		chat_print("show                        - Toggles the BidTracker GUI.");
 		chat_print("startauction                - Start the auction.");
 		chat_print("stopauction                 - Stop the auction.");
 		chat_print("announce                    - Announce the auction winner.");
 		chat_print("listbids                    - Locally list current bids.");
-		chat_print("listosbids			- Locally list current off-spec bids.");
+		chat_print("listosbids                  - Locally list current off-spec bids.");
+		chat_print("listaltbids                 - Locally list current alt bids.");
 		chat_print("removebid $player_name      - Remove the player's bid from the bidlist.");
 		chat_print("removeosbid $player_name    - Remove the player's off-spec bid from the bidlist.");
+		chat_print("removealtbid $player_name   - Remove the player's alt bid from the bidlist.");
 		chat_print("listsaves			- List saved finished auctions.");
-		chat_print("clearsaves			- Clear all saved auctions.");
+		chat_print("clearsaves                  - Clear all saved auctions.");
 	end
 end
 
@@ -277,12 +301,15 @@ function bidtracker_HandleAnnounce()
 
 	local prev_max = auction_min_bid; -- The amount you actually pay. (You always pay at least the minimum bid.)
 	
-	-- If the main bid table is empty we check off-spec bids.
-	if (next(auction_bids) == nil) then
-		bids_to_check = auction_os_bids;
-		SendChatMessage("There were no main spec bids! The item will go to an off-spec or alt!", "RAID", nil, nil);
-	else
+	-- We check the bid tables in order to see which table should be shown.
+	if (next(auction_bids) ~= nil) then
 		bids_to_check = auction_bids;
+	elseif (next(auction_os_bids) ~= nil) then
+		bids_to_check = auction_os_bids;
+		SendChatMessage("There were no main spec bids! The item will go to an off-spec!", "RAID", nil, nil);
+	elseif (next(auction_alt_bids) ~=nil) then
+		bids_to_check = auction_alt_bids;
+		SendChatMessage("There were no main spec bids or off-spec bids! The item will go to an alt!", "RAID", nil, nil);
 	end
 
 	-- Find the max bid. (or max bids if several people bid the same amount)
@@ -342,8 +369,9 @@ function bidtracker_HandleAnnounce()
 	end
 
 	auction_item = "";
-	auction_bids = {}
-	auction_os_bids = {}
+	auction_bids = {};
+	auction_os_bids = {};
+	auction_alt_bids = {};
 	
 	getglobal("BidTrackerFrameButtonAnnounce"):SetButtonState("DISABLED");
 	getglobal("BidTrackerFrameItemName"):SetText("");
