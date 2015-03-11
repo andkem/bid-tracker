@@ -59,7 +59,7 @@
 					<OnClick>bidtracker_HandleSetItemButton();</OnClick>
 				</Scripts>
 			</Button>
-			<Button name="$parentButtonStopCountdown" inherits="OptionsButtonTemplate" text="Stop Countdown">
+			<Button name="$parentButtonStopCountdown" inherits="OptionsButtonTemplate" text="Stop Timer">
 				<Anchors>
 					<Anchor point="BOTTOMLEFT">
 						<Offset>
