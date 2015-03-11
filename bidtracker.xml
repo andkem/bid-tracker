@@ -59,7 +59,7 @@
 					<OnClick>bidtracker_HandleSetItemButton();</OnClick>
 				</Scripts>
 			</Button>
-			<Button name="$parentButtonStopAuction" inherits="OptionsButtonTemplate" text="Stop Auction">
+			<Button name="$parentButtonStopCountdown" inherits="OptionsButtonTemplate" text="Stop Countdown">
 				<Anchors>
 					<Anchor point="BOTTOMLEFT">
 						<Offset>
@@ -68,8 +68,8 @@
 					</Anchor>
 				</Anchors>
 				<Scripts>
-					<OnLoad>getglobal("BidTrackerFrameButtonStopAuction"):SetButtonState("DISABLED");</OnLoad>
-					<OnClick>bidtracker_StopAuction();</OnClick>
+					<OnLoad>getglobal("BidTrackerFrameButtonStopCountdown"):SetButtonState("DISABLED");</OnLoad>
+					<OnClick>bidtracker_StopCountdown();</OnClick>
 				</Scripts>
 			</Button>
 			<Button name="$parentButtonScrollUp" inherits="OptionsButtonTemplate" text="Up">

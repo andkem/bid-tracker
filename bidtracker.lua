@@ -173,8 +173,8 @@ function bidtracker_OnCommand(msg)
 		end
 	elseif (command_words[1] == "startauction") then
 		bidtracker_StartAuction();
-	elseif (command_words[1] == "stopauction") then
-		bidtracker_StopAuction();
+	elseif (command_words[1] == "stopcountdown") then
+		bidtracker_StopCountdown();
 	elseif (command_words[1] == "announce") then
 		if (auction_started == false) then
 			bidtracker_HandleAnnounce();
@@ -228,7 +228,7 @@ function bidtracker_OnCommand(msg)
 		chat_print("setitem #min_bid $item_name - Set the minimum bid and the item to be auctioned. Shift-links do work!");
 		chat_print("show - Toggles the BidTracker GUI.");
 		chat_print("startauction                - Start the auction.");
-		chat_print("stopauction                 - Stop the auction.");
+		chat_print("stopcountdown               - Stop the announcement countdown.");
 		chat_print("announce                    - Announce the auction winner.");
 		chat_print("listbids                    - Locally list current bids.");
 		chat_print("listosbids			- Locally list current off-spec bids.");
@@ -246,9 +246,9 @@ function bidtracker_StartAuction()
 		
 		scroll = 0;
 		getglobal("BidTrackerFrameButtonStartAuction"):SetButtonState("DISABLED");
-		getglobal("BidTrackerFrameButtonAnnounce"):SetButtonState("DISABLED");
+		getglobal("BidTrackerFrameButtonAnnounce"):SetButtonState("NORMAL");
 		getglobal("BidTrackerFrameButtonSetItem"):SetButtonState("DISABLED");
-		getglobal("BidTrackerFrameButtonStopAuction"):SetButtonState("NORMAL");
+		getglobal("BidTrackerFrameButtonStopCountdown"):SetButtonState("DISABLED");
 		
 		chat_print("Auction started!");
 	else
@@ -256,24 +256,44 @@ function bidtracker_StartAuction()
 	end
 end
 
-function bidtracker_StopAuction()
-	auction_started = false;
-	SendChatMessage("The auction for the " .. auction_item .. " has finished. No more bids will be accepted!", "RAID", nil, nil);
-
+function bidtracker_StopCountdown()
+	Chronos.unscheduleByName("announcement");
+	chat_print("Auction countdown stopped!");
+	
 	getglobal("BidTrackerFrameButtonStartAuction"):SetButtonState("NORMAL");
 	getglobal("BidTrackerFrameButtonAnnounce"):SetButtonState("NORMAL");
 	getglobal("BidTrackerFrameButtonSetItem"):SetButtonState("NORMAL");
-	getglobal("BidTrackerFrameButtonStopAuction"):SetButtonState("DISABLED");
+	getglobal("BidTrackerFrameButtonStopCountdown"):SetButtonState("DISABLED");
+end
+
+function bidtracker_HandleAnnounce()
+	SendChatMessage("WARNING! The auction for the " .. auction_item .. " will end in 30 seconds! Bid now if you want it!", "RAID", nil, nil);
+	Chronos.scheduleByName("announcement", 30, bidtracker_HandleAnnounceCallback);
 	
-	chat_print("Auction finished!");
+	getglobal("BidTrackerFrameButtonStartAuction"):SetButtonState("DISABLED");
+	getglobal("BidTrackerFrameButtonAnnounce"):SetButtonState("DISABLED");
+	getglobal("BidTrackerFrameButtonSetItem"):SetButtonState("DISABLED");
+	getglobal("BidTrackerFrameButtonStopCountdown"):SetButtonState("NORMAL");
 end
 
 -- Announce the winner of the auction.
-function bidtracker_HandleAnnounce()
+function bidtracker_HandleAnnounceCallback()
 	local current_max = -1000000;
 	local max_bidders = {};
 	local random_player = 1;
 	local bids_to_check;	
+
+
+	auction_started = false;
+	SendChatMessage("The auction for the " .. auction_item .. " has finished. No more bids will be accepted!", "RAID", nil, nil);
+
+	getglobal("BidTrackerFrameButtonStartAuction"):SetButtonState("NORMAL");
+	getglobal("BidTrackerFrameButtonAnnounce"):SetButtonState("DISABLED");
+	getglobal("BidTrackerFrameButtonSetItem"):SetButtonState("NORMAL");
+	getglobal("BidTrackerFrameButtonStopCountdown"):SetButtonState("DISABLED");
+	
+	chat_print("Auction finished!");
+
 
 	local prev_max = auction_min_bid; -- The amount you actually pay. (You always pay at least the minimum bid.)
 	
