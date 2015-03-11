@@ -85,6 +85,136 @@
 					<OnClick>bidtracker_ScrollUp();</OnClick>
 				</Scripts>
 			</Button>
+			<Button name="$parentButtonDeleteBid0" inherits="OptionsButtonTemplate" text="X">
+				<Size x="15" y="15" />
+				<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset>
+							<AbsDimension x="-70" y="-85" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>bidtracker_RemoveBidButton(0);</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parentButtonDeleteBid1" inherits="OptionsButtonTemplate" text="X">
+				<Size x="15" y="15" />
+				<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset>
+							<AbsDimension x="-70" y="-100" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>bidtracker_RemoveBidButton(1);</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parentButtonDeleteBid2" inherits="OptionsButtonTemplate" text="X">
+				<Size x="15" y="15" />
+				<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset>
+							<AbsDimension x="-70" y="-115" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>bidtracker_RemoveBidButton(2);</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parentButtonDeleteBid3" inherits="OptionsButtonTemplate" text="X">
+				<Size x="15" y="15" />
+				<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset>
+							<AbsDimension x="-70" y="-130" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>bidtracker_RemoveBidButton(3);</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parentButtonDeleteBid4" inherits="OptionsButtonTemplate" text="X">
+				<Size x="15" y="15" />
+				<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset>
+							<AbsDimension x="-70" y="-145" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>bidtracker_RemoveBidButton(4);</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parentButtonDeleteBid5" inherits="OptionsButtonTemplate" text="X">
+				<Size x="15" y="15" />
+				<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset>
+							<AbsDimension x="-70" y="-160" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>bidtracker_RemoveBidButton(5);</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parentButtonDeleteBid6" inherits="OptionsButtonTemplate" text="X">
+				<Size x="15" y="15" />
+				<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset>
+							<AbsDimension x="-70" y="-175" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>bidtracker_RemoveBidButton(6);</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parentButtonDeleteBid7" inherits="OptionsButtonTemplate" text="X">
+				<Size x="15" y="15" />
+				<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset>
+							<AbsDimension x="-70" y="-190" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>bidtracker_RemoveBidButton(7);</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parentButtonDeleteBid8" inherits="OptionsButtonTemplate" text="X">
+				<Size x="15" y="15" />
+				<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset>
+							<AbsDimension x="-70" y="-205" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>bidtracker_RemoveBidButton(8);</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parentButtonDeleteBid9" inherits="OptionsButtonTemplate" text="X">
+				<Size x="15" y="15" />
+				<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset>
+							<AbsDimension x="-70" y="-220" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>bidtracker_RemoveBidButton(9);</OnClick>
+				</Scripts>
+			</Button>
 			<Button name="$parentButtonScrollDown" inherits="OptionsButtonTemplate" text="Down">
 				<Size x="50" y="20" />
 				<Anchors>
