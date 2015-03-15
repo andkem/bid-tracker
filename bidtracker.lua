@@ -218,11 +218,7 @@ function bidtracker_OnCommand(msg)
 	elseif (command_words[1] == "stopcountdown") then
 		bidtracker_StopCountdown();
 	elseif (command_words[1] == "announce") then
-		if (auction_started == false) then
-			bidtracker_HandleAnnounce();
-		else
-			chat_print("Stop the auction before announcing!");
-		end
+		bidtracker_HandleAnnounce();
 	elseif (command_words[1] == "listbids") then
 		chat_print("Name: bid");
 		for name, bid in pairs(auction_bids) do
