@@ -3,5 +3,5 @@
 ## Interface: 11200
 ## OptionalDeps:
 ## SavedVariables: completed_auctions
-## Dependencies:
+## Dependencies: Chronos
 bidtracker.xml
